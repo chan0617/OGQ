@@ -1,682 +1,564 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>OGQ 스티커 분할기</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
-  background: #111118;
-  color: #dde0f0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 32px 16px 60px;
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Segoe UI','Apple SD Gothic Neo',sans-serif;
+  background:#0d0d14;color:#dde0f0;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:32px 16px 60px;
 }
-
-h1 {
-  font-size: 1.5rem; font-weight: 700; margin-bottom: 4px;
-  background: linear-gradient(135deg, #a78bfa, #60a5fa);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+h1{
+  font-size:1.5rem;font-weight:700;margin-bottom:4px;
+  background:linear-gradient(135deg,#a78bfa,#60a5fa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
-.sub { font-size: 0.8rem; color: #666; margin-bottom: 28px; }
+.sub{font-size:.8rem;color:#555;margin-bottom:24px}
 
 /* 업로드 */
-#drop-zone {
-  width: 100%; max-width: 700px;
-  border: 2px dashed #2e2e48; border-radius: 14px;
-  padding: 44px 24px; text-align: center; cursor: pointer;
-  transition: border-color .2s, background .2s; position: relative;
+#drop-zone{
+  width:100%;max-width:860px;
+  border:2px dashed #2a2a42;border-radius:14px;
+  padding:44px 24px;text-align:center;cursor:pointer;
+  transition:border-color .2s,background .2s;position:relative;
 }
-#drop-zone:hover, #drop-zone.over { border-color: #a78bfa; background: rgba(167,139,250,.05); }
-#drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-#drop-zone .ico { font-size: 2rem; margin-bottom: 10px; }
-#drop-zone p { font-size: .88rem; color: #888; }
-#drop-zone strong { color: #c4b5fd; }
+#drop-zone:hover,#drop-zone.over{border-color:#a78bfa;background:rgba(167,139,250,.05)}
+#drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+#drop-zone .ico{font-size:2rem;margin-bottom:10px}
+#drop-zone p{font-size:.88rem;color:#888}
+#drop-zone strong{color:#c4b5fd}
 
-/* 캔버스 래퍼 */
-#canvas-wrap {
-  width: 100%; max-width: 900px;
-  margin-top: 20px; display: none;
-  position: relative; user-select: none;
+/* 안내 배너 */
+#guide-bar{
+  width:100%;max-width:860px;
+  margin-top:14px;padding:12px 18px;
+  background:#191926;border-radius:10px;border-left:3px solid #7c3aed;
+  font-size:.82rem;color:#aaa;line-height:1.6;display:none;
 }
-#crop-canvas {
-  display: block; width: 100%; border-radius: 10px;
-  border: 1px solid #2a2a3e;
-  cursor: crosshair;
+#guide-bar b{color:#c4b5fd}
+#guide-bar .step-dots{display:flex;gap:6px;margin-top:8px}
+.dot{
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:700;border:2px solid #2e2e4a;color:#555;
 }
+.dot.done{background:#7c3aed;border-color:#7c3aed;color:#fff}
+.dot.active{border-color:#a78bfa;color:#a78bfa}
 
-/* 좌표 입력 패널 */
-#coord-panel {
-  width: 100%; max-width: 900px;
-  margin-top: 14px; display: none;
-  background: #1a1a28; border-radius: 12px;
-  padding: 16px 20px;
-  display: none; flex-wrap: wrap; gap: 10px 20px; align-items: center;
+/* 캔버스 */
+#canvas-wrap{
+  width:100%;max-width:860px;
+  margin-top:14px;display:none;position:relative;
 }
-.coord-group { display: flex; align-items: center; gap: 6px; }
-.coord-group label { font-size: .75rem; color: #888; white-space: nowrap; }
-.coord-group input[type=number] {
-  width: 86px; background: #0f0f1a; border: 1px solid #2e2e48;
-  border-radius: 7px; color: #e0e4f0; padding: 5px 8px;
-  font-size: .82rem; font-family: monospace; text-align: right;
-}
-.coord-group input:focus { outline: none; border-color: #7c3aed; }
-.coord-group span { font-size: .72rem; color: #555; }
-
-.coord-note { font-size: .72rem; color: #555; flex-basis: 100%; }
-
-.badge {
-  font-size: .7rem; padding: 3px 8px; border-radius: 6px;
-  background: rgba(124,58,237,.18); color: #a78bfa; font-weight: 600;
+#main-canvas{
+  display:block;width:100%;border-radius:10px;
+  border:1px solid #1e1e30;
 }
 
-/* 리셋 버튼 */
-#reset-btn {
-  font-size: .75rem; padding: 5px 12px; border: 1px solid #2e2e48;
-  border-radius: 7px; background: transparent; color: #888; cursor: pointer;
-  margin-left: auto;
+/* 좌표 표시 */
+#coord-info{
+  width:100%;max-width:860px;margin-top:10px;
+  display:none;
+  background:#141420;border-radius:10px;padding:12px 16px;
+  font-size:.75rem;font-family:monospace;color:#666;line-height:1.8;
 }
-#reset-btn:hover { border-color: #7c3aed; color: #a78bfa; }
+#coord-info .row{display:flex;gap:24px;flex-wrap:wrap}
+.ci{color:#a78bfa}
+.ci span{color:#e0e4f0}
 
-/* 실행 버튼 */
-#run-btn {
-  margin-top: 20px; padding: 13px 52px;
-  font-size: .92rem; font-weight: 600; border: none; border-radius: 11px;
-  background: linear-gradient(135deg, #7c3aed, #2563eb); color: #fff;
-  cursor: pointer; display: none; transition: opacity .2s, transform .1s;
+/* 버튼들 */
+.btn-row{
+  width:100%;max-width:860px;margin-top:16px;
+  display:none;gap:10px;flex-wrap:wrap;
 }
-#run-btn:hover { opacity: .87; transform: translateY(-1px); }
-#run-btn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+button.sec{
+  padding:9px 20px;font-size:.82rem;font-weight:600;
+  border:1px solid #2e2e4a;border-radius:9px;
+  background:transparent;color:#888;cursor:pointer;transition:all .2s;
+}
+button.sec:hover{border-color:#7c3aed;color:#a78bfa}
+button.pri{
+  padding:11px 36px;font-size:.9rem;font-weight:700;
+  border:none;border-radius:10px;
+  background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;
+  cursor:pointer;transition:opacity .2s,transform .1s;flex:1;
+}
+button.pri:hover{opacity:.88;transform:translateY(-1px)}
+button.pri:disabled{opacity:.35;cursor:not-allowed;transform:none}
 
 /* 진행 */
-#prog-wrap { width: 100%; max-width: 900px; margin-top: 16px; display: none; }
-#prog-bg { height: 5px; background: #2a2a3e; border-radius: 99px; overflow: hidden; }
-#prog-bar { height: 100%; width: 0%; background: linear-gradient(90deg,#7c3aed,#2563eb); transition: width .1s; }
-#prog-label { font-size: .74rem; color: #666; margin-top: 5px; text-align: right; }
+#prog-wrap{width:100%;max-width:860px;margin-top:14px;display:none}
+#prog-bg{height:5px;background:#1e1e2e;border-radius:99px;overflow:hidden}
+#prog-bar{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#2563eb);transition:width .1s}
+#prog-lbl{font-size:.72rem;color:#555;margin-top:4px;text-align:right}
 
 /* 결과 */
-#result-sec { width: 100%; max-width: 900px; margin-top: 28px; display: none; }
-#result-sec h2 { font-size: .95rem; font-weight: 600; color: #c4b5fd; margin-bottom: 12px; }
-#sticker-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; }
-.s-item {
-  position: relative; aspect-ratio: 740/640;
-  background: repeating-conic-gradient(#1e1e2a 0% 25%,#23233a 0% 50%) 0 0/10px 10px;
-  border-radius: 5px; overflow: hidden; cursor: pointer;
+#result-sec{width:100%;max-width:860px;margin-top:28px;display:none}
+#result-sec h2{font-size:.92rem;font-weight:600;color:#c4b5fd;margin-bottom:12px}
+#sticker-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.s-item{
+  position:relative;aspect-ratio:740/640;
+  background:repeating-conic-gradient(#1a1a26 0% 25%,#202030 0% 50%) 0 0/10px 10px;
+  border-radius:4px;overflow:hidden;cursor:pointer;
 }
-.s-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.s-item .n { position: absolute; bottom: 2px; right: 4px; font-size: 9px; color: rgba(255,255,255,.45); }
+.s-item img{width:100%;height:100%;object-fit:cover;display:block}
+.s-item .n{position:absolute;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,.4)}
 
-#dl-btn {
-  margin-top: 14px; width: 100%; padding: 12px;
-  font-size: .88rem; font-weight: 600; border: none; border-radius: 11px;
-  background: linear-gradient(135deg,#059669,#0891b2); color: #fff;
-  cursor: pointer; transition: opacity .2s;
+#dl-btn{
+  margin-top:12px;width:100%;padding:12px;
+  font-size:.88rem;font-weight:600;border:none;border-radius:10px;
+  background:linear-gradient(135deg,#059669,#0891b2);color:#fff;
+  cursor:pointer;transition:opacity .2s;
 }
-#dl-btn:hover { opacity: .87; }
-#dl-btn:disabled { opacity: .35; cursor: not-allowed; }
+#dl-btn:hover{opacity:.88}
+#dl-btn:disabled{opacity:.35;cursor:not-allowed}
 
 /* 로그 */
-#log {
-  width: 100%; max-width: 900px; margin-top: 14px;
-  background: #090910; border-radius: 9px; padding: 12px 14px;
-  font-size: .72rem; color: #555; font-family: monospace;
-  line-height: 1.8; display: none; max-height: 240px; overflow-y: auto; white-space: pre;
+#log{
+  width:100%;max-width:860px;margin-top:12px;
+  background:#080810;border-radius:9px;padding:12px 14px;
+  font-size:.72rem;color:#555;font-family:monospace;
+  line-height:1.8;display:none;max-height:220px;overflow-y:auto;white-space:pre;
 }
-.ok { color: #34d399; } .er { color: #f87171; } .inf { color: #60a5fa; } .wn { color: #fbbf24; }
+.ok{color:#34d399}.er{color:#f87171}.inf{color:#60a5fa}.wn{color:#fbbf24}
 </style>
 </head>
 <body>
 
 <h1>OGQ 스티커 분할기</h1>
-<p class="sub">crop 박스를 드래그/리사이즈로 맞추고 24개 분할</p>
+<p class="sub">4개 꼭짓점 직접 지정 → 원본 픽셀 기준 crop → 24개 분할</p>
 
-<!-- 업로드 -->
 <div id="drop-zone">
-  <input type="file" id="file-in" accept="image/*" />
+  <input type="file" id="file-in" accept="image/*"/>
   <div class="ico">🖼️</div>
   <p><strong>PNG 파일을 드래그</strong>하거나 클릭해서 선택</p>
-  <p style="margin-top:6px;font-size:.75rem;color:#444;">비율 4440:2560 · 6열 × 4행 · 24개</p>
+  <p style="margin-top:6px;font-size:.72rem;color:#444">4800×3584px · 6열 × 4행 · 24개 스티커</p>
+</div>
+
+<!-- 안내 -->
+<div id="guide-bar">
+  <b id="guide-text">이미지에서 스티커 영역의 꼭짓점 4개를 순서대로 클릭하세요.</b>
+  <div class="step-dots">
+    <div class="dot active" id="d1">1</div>
+    <div class="dot" id="d2">2</div>
+    <div class="dot" id="d3">3</div>
+    <div class="dot" id="d4">4</div>
+  </div>
+  <div style="margin-top:8px;font-size:.72rem;color:#555">
+    ① 좌상단 → ② 우상단 → ③ 우하단 → ④ 좌하단 순서 (순서 무관, 4점을 찍으면 자동 인식)
+  </div>
 </div>
 
 <!-- 캔버스 -->
-<div id="canvas-wrap">
-  <canvas id="crop-canvas"></canvas>
+<div id="canvas-wrap"><canvas id="main-canvas"></canvas></div>
+
+<!-- 좌표 -->
+<div id="coord-info">
+  <div class="row">
+    <span class="ci">원본 크기: <span id="ci-orig">—</span></span>
+    <span class="ci">선택 영역: <span id="ci-box">—</span></span>
+    <span class="ci">셀 크기: <span id="ci-cell">—</span></span>
+  </div>
 </div>
 
-<!-- 좌표 패널 -->
-<div id="coord-panel">
-  <div class="coord-group">
-    <label>X</label>
-    <input type="number" id="ci-x" min="0" value="0" />
-    <span>px</span>
-  </div>
-  <div class="coord-group">
-    <label>Y</label>
-    <input type="number" id="ci-y" min="0" value="0" />
-    <span>px</span>
-  </div>
-  <div class="coord-group">
-    <label>Width</label>
-    <input type="number" id="ci-w" min="100" value="4440" />
-    <span>px</span>
-  </div>
-  <div class="coord-group">
-    <label>Height</label>
-    <input type="number" id="ci-h" min="100" value="2560" />
-    <span>px</span>
-  </div>
-  <span class="badge" id="cell-badge">셀: 740 × 640 px</span>
-  <button id="reset-btn">비율 초기화</button>
-  <p class="coord-note">* 좌표는 원본 이미지 픽셀 기준 · crop 박스를 드래그해서 직접 맞추세요</p>
+<!-- 버튼 -->
+<div class="btn-row" id="btn-row" style="display:none;display:flex">
+  <button class="sec" id="reset-pts">↺ 점 초기화</button>
+  <button class="pri" id="run-btn" disabled>✂️ 분할 시작</button>
 </div>
-
-<button id="run-btn">✂️ 분할 시작</button>
 
 <div id="prog-wrap">
   <div id="prog-bg"><div id="prog-bar"></div></div>
-  <div id="prog-label">0 / 24</div>
+  <div id="prog-lbl">0 / 24</div>
 </div>
 
 <div id="result-sec">
   <h2>분할 결과 — 클릭하면 개별 다운로드</h2>
   <div id="sticker-grid"></div>
-  <button id="dl-btn">⬇️ 전체 ZIP 다운로드</button>
+  <button id="dl-btn">⬇️ 전체 ZIP 다운로드 (sticker_01 ~ sticker_24)</button>
 </div>
 
 <div id="log"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-(() => {
+(()=>{
 'use strict';
 
 // ── 상수 ──────────────────────────────────────────────────
-const ASPECT   = 4440 / 2560;  // 1.734375
-const OUT_W    = 4440;
-const OUT_H    = 2560;
-const COLS     = 6;
-const ROWS     = 4;
-const CELL_W   = 740;
-const CELL_H   = 640;
-const TOTAL    = COLS * ROWS;
-const H_SIZE   = 8;   // 핸들 반지름 (px, 화면 기준)
+const COLS=6, ROWS=4, OUT_W=4440, OUT_H=2560, CELL_W=740, CELL_H=640, TOTAL=24;
+const PT_R = 8;  // 핸들 반지름 (캔버스 내부 px)
+const PT_LABELS = ['① 좌상단','② 우상단','③ 우하단','④ 좌하단'];
+const COLORS = ['#f87171','#34d399','#60a5fa','#fbbf24'];
 
 // ── 상태 ──────────────────────────────────────────────────
-let origImg  = null;   // HTMLImageElement (원본)
-let srcCvs   = null;   // 원본 해상도 오프스크린 캔버스
-let scale    = 1;      // canvas display px / original px
-
-// crop box: 원본 픽셀 좌표
-let box = { x: 0, y: 0, w: 0, h: 0 };
-
-let drag     = null;   // { mode:'move'|handle, sx, sy, startBox }
+let origImg   = null;
+let srcCvs    = null;   // 원본 해상도 오프스크린 캔버스
+let dispScale = 1;      // canvas.width / img.naturalWidth  (내부 해상도 배율)
+// pts: 원본 이미지 픽셀 좌표 [{x,y}, ...]  최대 4개
+let pts = [];
+let dragging = null;    // 드래그 중인 점 인덱스
 let resultBlobs = [];
 
-// ── DOM ────────────────────────────────────────────────────
+// ── DOM ──────────────────────────────────────────────────
 const dropZone   = document.getElementById('drop-zone');
 const fileIn     = document.getElementById('file-in');
+const guideBar   = document.getElementById('guide-bar');
+const guideText  = document.getElementById('guide-text');
 const canvasWrap = document.getElementById('canvas-wrap');
-const cvs        = document.getElementById('crop-canvas');
+const cvs        = document.getElementById('main-canvas');
 const ctx        = cvs.getContext('2d');
-const coordPanel = document.getElementById('coord-panel');
-const ciX        = document.getElementById('ci-x');
-const ciY        = document.getElementById('ci-y');
-const ciW        = document.getElementById('ci-w');
-const ciH        = document.getElementById('ci-h');
-const cellBadge  = document.getElementById('cell-badge');
-const resetBtn   = document.getElementById('reset-btn');
+const coordInfo  = document.getElementById('coord-info');
+const ciOrig     = document.getElementById('ci-orig');
+const ciBox      = document.getElementById('ci-box');
+const ciCell     = document.getElementById('ci-cell');
+const btnRow     = document.getElementById('btn-row');
+const resetPts   = document.getElementById('reset-pts');
 const runBtn     = document.getElementById('run-btn');
 const progWrap   = document.getElementById('prog-wrap');
 const progBar    = document.getElementById('prog-bar');
-const progLbl    = document.getElementById('prog-label');
+const progLbl    = document.getElementById('prog-lbl');
 const resultSec  = document.getElementById('result-sec');
 const stickerGrid= document.getElementById('sticker-grid');
 const dlBtn      = document.getElementById('dl-btn');
 const logEl      = document.getElementById('log');
 
-// ── 파일 로드 ──────────────────────────────────────────────
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
-dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('over'); loadFile(e.dataTransfer.files[0]); });
-fileIn.addEventListener('change', () => { if (fileIn.files[0]) loadFile(fileIn.files[0]); });
+// ── 파일 로드 ─────────────────────────────────────────────
+dropZone.addEventListener('dragover', e=>{e.preventDefault();dropZone.classList.add('over')});
+dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e=>{e.preventDefault();dropZone.classList.remove('over');loadFile(e.dataTransfer.files[0])});
+fileIn.addEventListener('change', ()=>{if(fileIn.files[0])loadFile(fileIn.files[0])});
 
-function loadFile(file) {
-  if (!file) return;
+function loadFile(file){
+  if(!file) return;
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = ev=>{
     const img = new Image();
-    img.onload = () => {
+    img.onload = ()=>{
       origImg = img;
 
-      // 원본 해상도 오프스크린 캔버스
+      // 원본 해상도 오프스크린 캔버스 (저장용)
       srcCvs = document.createElement('canvas');
       srcCvs.width  = img.naturalWidth;
       srcCvs.height = img.naturalHeight;
       srcCvs.getContext('2d').drawImage(img, 0, 0);
 
       initCanvas();
-      initBox();
+      resetAll();
 
       canvasWrap.style.display = 'block';
-      coordPanel.style.display = 'flex';
-      runBtn.style.display     = 'inline-block';
+      guideBar.style.display   = 'block';
+      coordInfo.style.display  = 'block';
+      btnRow.style.display     = 'flex';
       resultSec.style.display  = 'none';
       logEl.style.display      = 'none';
       logEl.innerHTML          = '';
-      stickerGrid.innerHTML    = '';
-      resultBlobs              = [];
     };
     img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
 }
 
-// ── 캔버스 초기화 ──────────────────────────────────────────
-function initCanvas() {
-  const maxW = Math.min(900, window.innerWidth - 32);
-  scale = maxW / origImg.naturalWidth;
-  cvs.width  = origImg.naturalWidth  * scale;
-  cvs.height = origImg.naturalHeight * scale;
-  render();
+// ── 캔버스 초기화 ─────────────────────────────────────────
+// canvas.width = img.naturalWidth * dispScale  → 내부 해상도
+// CSS width:100% 로 화면에 맞춰 표시
+function initCanvas(){
+  const maxW = Math.min(860, window.innerWidth - 32);
+  dispScale  = maxW / origImg.naturalWidth;
+  cvs.width  = Math.round(origImg.naturalWidth  * dispScale);
+  cvs.height = Math.round(origImg.naturalHeight * dispScale);
+  ciOrig.textContent = `${origImg.naturalWidth} × ${origImg.naturalHeight} px`;
 }
 
-// ── crop box 초기화 (중앙, 4440:2560 비율) ────────────────
-function initBox() {
-  const iw = origImg.naturalWidth;
-  const ih = origImg.naturalHeight;
-  // 원본 너비를 기준으로 가능한 최대
-  let bw = Math.min(iw, ih * ASPECT);
-  let bh = bw / ASPECT;
-  if (bh > ih) { bh = ih; bw = bh * ASPECT; }
-  box = {
-    x: Math.round((iw - bw) / 2),
-    y: Math.round((ih - bh) / 2),
-    w: Math.round(bw),
-    h: Math.round(bh)
-  };
-  updateCoordInputs();
-}
+window.addEventListener('resize', ()=>{ if(origImg){ initCanvas(); render(); }});
 
-// ── 좌표 입력 → 박스 반영 ──────────────────────────────────
-[ciX, ciY, ciW, ciH].forEach(el => el.addEventListener('change', applyCoordInputs));
-
-function applyCoordInputs() {
-  let x = parseInt(ciX.value) || 0;
-  let y = parseInt(ciY.value) || 0;
-  let w = parseInt(ciW.value) || 100;
-  let h = parseInt(ciH.value) || 100;
-  x = clamp(x, 0, origImg.naturalWidth  - w);
-  y = clamp(y, 0, origImg.naturalHeight - h);
-  w = clamp(w, 100, origImg.naturalWidth);
-  h = clamp(h, 100, origImg.naturalHeight);
-  box = { x, y, w, h };
-  updateCoordInputs();
-  render();
-}
-
-function updateCoordInputs() {
-  ciX.value = Math.round(box.x);
-  ciY.value = Math.round(box.y);
-  ciW.value = Math.round(box.w);
-  ciH.value = Math.round(box.h);
-  const cw = Math.round(box.w / COLS);
-  const ch = Math.round(box.h / ROWS);
-  cellBadge.textContent = `셀: ${cw} × ${ch} px`;
-}
-
-// 비율 초기화 버튼
-resetBtn.addEventListener('click', () => {
-  const cx = box.x + box.w / 2;
-  const cy = box.y + box.h / 2;
-  let bw = box.w, bh = bw / ASPECT;
-  box = {
-    x: clamp(cx - bw / 2, 0, origImg.naturalWidth  - bw),
-    y: clamp(cy - bh / 2, 0, origImg.naturalHeight - bh),
-    w: bw, h: bh
-  };
-  updateCoordInputs();
-  render();
-});
-
-// ── 핸들 정의 (캔버스 좌표) ───────────────────────────────
-function getHandles() {
-  const { x, y, w, h } = boxCanvas();
+// ── 좌표 변환 ─────────────────────────────────────────────
+// 마우스 이벤트 clientX/Y  →  캔버스 내부 px  →  원본 이미지 px
+function getOrigCoord(e){
+  const rect = cvs.getBoundingClientRect();
+  // CSS 표시 크기 대비 캔버스 내부 해상도 보정
+  const cssToCanvasX = cvs.width  / rect.width;
+  const cssToCanvasY = cvs.height / rect.height;
+  const canvasX = (e.clientX - rect.left) * cssToCanvasX;
+  const canvasY = (e.clientY - rect.top)  * cssToCanvasY;
+  // 캔버스 내부 px → 원본 이미지 px
+  const origX = canvasX / dispScale;
+  const origY = canvasY / dispScale;
   return {
-    tl: { cx: x,       cy: y       },
-    t:  { cx: x+w/2,   cy: y       },
-    tr: { cx: x+w,     cy: y       },
-    r:  { cx: x+w,     cy: y+h/2   },
-    br: { cx: x+w,     cy: y+h     },
-    b:  { cx: x+w/2,   cy: y+h     },
-    bl: { cx: x,       cy: y+h     },
-    l:  { cx: x,       cy: y+h/2   },
+    ox: clamp(origX, 0, origImg.naturalWidth),
+    oy: clamp(origY, 0, origImg.naturalHeight),
+    cx: canvasX,
+    cy: canvasY
   };
 }
 
-function boxCanvas() {
-  return { x: box.x*scale, y: box.y*scale, w: box.w*scale, h: box.h*scale };
-}
+// 원본 이미지 px → 캔버스 내부 px
+function toCanvas(ox, oy){ return { cx: ox * dispScale, cy: oy * dispScale }; }
 
-function hitHandle(mx, my) {
-  const hs = getHandles();
-  for (const [name, h] of Object.entries(hs)) {
-    if (Math.abs(mx - h.cx) <= H_SIZE + 2 && Math.abs(my - h.cy) <= H_SIZE + 2) return name;
+// ── 점 리셋 ──────────────────────────────────────────────
+function resetAll(){
+  pts = [];
+  resultBlobs = [];
+  stickerGrid.innerHTML = '';
+  runBtn.disabled = true;
+  updateDots();
+  updateGuide();
+  render();
+}
+resetPts.addEventListener('click', resetAll);
+
+// ── 클릭으로 점 추가 ──────────────────────────────────────
+cvs.addEventListener('mousedown', e=>{
+  const {ox, oy, cx, cy} = getOrigCoord(e);
+
+  // 기존 점 드래그 시작?
+  for(let i=0;i<pts.length;i++){
+    const {cx:px, cy:py} = toCanvas(pts[i].x, pts[i].y);
+    if(Math.hypot(cx-px, cy-py) <= PT_R + 4){
+      dragging = i;
+      cvs.style.cursor = 'grabbing';
+      return;
+    }
   }
-  return null;
-}
 
-function inBox(mx, my) {
-  const b = boxCanvas();
-  return mx > b.x && mx < b.x + b.w && my > b.y && my < b.y + b.h;
-}
-
-// ── 마우스 이벤트 ─────────────────────────────────────────
-cvs.addEventListener('mousedown', e => {
-  const { mx, my } = getMouse(e);
-  const handle = hitHandle(mx, my);
-  if (handle) {
-    drag = { mode: handle, sx: mx, sy: my, startBox: { ...box } };
-  } else if (inBox(mx, my)) {
-    drag = { mode: 'move', sx: mx, sy: my, startBox: { ...box } };
+  // 4점 미만이면 새 점 추가
+  if(pts.length < 4){
+    pts.push({ x: ox, y: oy });
+    updateDots();
+    updateGuide();
+    if(pts.length === 4){
+      runBtn.disabled = false;
+    }
+    render();
   }
-  if (drag) e.preventDefault();
 });
 
-cvs.addEventListener('mousemove', e => {
-  const { mx, my } = getMouse(e);
-  if (!drag) {
-    // 커서 변경
-    const h = hitHandle(mx, my);
-    if      (h === 'tl' || h === 'br') cvs.style.cursor = 'nwse-resize';
-    else if (h === 'tr' || h === 'bl') cvs.style.cursor = 'nesw-resize';
-    else if (h === 't'  || h === 'b' ) cvs.style.cursor = 'ns-resize';
-    else if (h === 'l'  || h === 'r' ) cvs.style.cursor = 'ew-resize';
-    else if (inBox(mx, my))            cvs.style.cursor = 'move';
-    else                               cvs.style.cursor = 'crosshair';
+cvs.addEventListener('mousemove', e=>{
+  const {ox, oy, cx, cy} = getOrigCoord(e);
+
+  if(dragging !== null){
+    pts[dragging] = { x: ox, y: oy };
+    updateCoordDisplay();
+    render();
     return;
   }
 
-  const iw = origImg.naturalWidth;
-  const ih = origImg.naturalHeight;
-
-  // 현재 마우스 → 원본 픽셀 좌표
-  const ox = mx / scale;
-  const oy = my / scale;
-  const sb = drag.startBox;
-
-  if (drag.mode === 'move') {
-    const dx = (mx - drag.sx) / scale;
-    const dy = (my - drag.sy) / scale;
-    box.x = clamp(sb.x + dx, 0, iw - box.w);
-    box.y = clamp(sb.y + dy, 0, ih - box.h);
-  } else {
-    // 리사이즈: 원본 픽셀 기준으로 계산
-    const right  = sb.x + sb.w;
-    const bottom = sb.y + sb.h;
-    let nx = box.x, ny = box.y, nw = box.w, nh = box.h;
-
-    switch (drag.mode) {
-      case 'br':
-        nw = Math.max(100, ox - sb.x);
-        nh = nw / ASPECT;
-        nx = sb.x; ny = sb.y;
-        break;
-      case 'bl':
-        nw = Math.max(100, right - ox);
-        nh = nw / ASPECT;
-        nx = right - nw;
-        ny = bottom - nh;
-        break;
-      case 'tr':
-        nw = Math.max(100, ox - sb.x);
-        nh = nw / ASPECT;
-        nx = sb.x;
-        ny = bottom - nh;
-        break;
-      case 'tl':
-        nw = Math.max(100, right - ox);
-        nh = nw / ASPECT;
-        nx = right - nw;
-        ny = bottom - nh;
-        break;
-      case 'r':
-        nw = Math.max(100, ox - sb.x);
-        nh = nw / ASPECT;
-        nx = sb.x;
-        ny = sb.y + (sb.h - nh) / 2;
-        break;
-      case 'l':
-        nw = Math.max(100, right - ox);
-        nh = nw / ASPECT;
-        nx = right - nw;
-        ny = sb.y + (sb.h - nh) / 2;
-        break;
-      case 'b':
-        nh = Math.max(100, oy - sb.y);
-        nw = nh * ASPECT;
-        nx = sb.x + (sb.w - nw) / 2;
-        ny = sb.y;
-        break;
-      case 't':
-        nh = Math.max(100, bottom - oy);
-        nw = nh * ASPECT;
-        nx = sb.x + (sb.w - nw) / 2;
-        ny = bottom - nh;
-        break;
-    }
-
-    // 클램프
-    nx = clamp(nx, 0, iw - nw);
-    ny = clamp(ny, 0, ih - nh);
-    nw = clamp(nw, 100, iw - nx);
-    nh = clamp(nh, 100, ih - ny);
-    box = { x: nx, y: ny, w: nw, h: nh };
+  // 커서
+  let overPt = false;
+  for(let i=0;i<pts.length;i++){
+    const {cx:px,cy:py} = toCanvas(pts[i].x, pts[i].y);
+    if(Math.hypot(cx-px, cy-py) <= PT_R+4){ overPt=true; break; }
   }
-
-  updateCoordInputs();
-  render();
+  cvs.style.cursor = overPt ? 'grab' : (pts.length<4 ? 'crosshair' : 'default');
 });
 
-window.addEventListener('mouseup', () => { drag = null; });
+window.addEventListener('mouseup', ()=>{
+  if(dragging !== null){ dragging=null; cvs.style.cursor='default'; updateCoordDisplay(); }
+});
 
-// 터치 지원
-cvs.addEventListener('touchstart', e => {
-  const t = e.touches[0];
-  cvs.dispatchEvent(new MouseEvent('mousedown', { clientX: t.clientX, clientY: t.clientY }));
-}, { passive: false });
-cvs.addEventListener('touchmove', e => {
-  e.preventDefault();
-  const t = e.touches[0];
-  cvs.dispatchEvent(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY }));
-}, { passive: false });
-cvs.addEventListener('touchend', () => cvs.dispatchEvent(new MouseEvent('mouseup')));
+// ── 안내 텍스트 / 점 도트 ────────────────────────────────
+const stepDots = [1,2,3,4].map(i=>document.getElementById('d'+i));
 
-function getMouse(e) {
-  const r = cvs.getBoundingClientRect();
-  const scaleX = cvs.width  / r.width;
-  const scaleY = cvs.height / r.height;
-  return {
-    mx: (e.clientX - r.left) * scaleX,
-    my: (e.clientY - r.top)  * scaleY
-  };
+function updateDots(){
+  stepDots.forEach((d,i)=>{
+    d.className = 'dot';
+    if(i < pts.length)       d.classList.add('done');
+    else if(i === pts.length) d.classList.add('active');
+  });
 }
 
-// ── 렌더링 ─────────────────────────────────────────────────
-function render() {
-  if (!origImg) return;
-  ctx.clearRect(0, 0, cvs.width, cvs.height);
+const GUIDE_MSGS = [
+  '① <b>좌상단</b> 꼭짓점을 클릭하세요.',
+  '② <b>우상단</b> 꼭짓점을 클릭하세요.',
+  '③ <b>우하단</b> 꼭짓점을 클릭하세요.',
+  '④ <b>좌하단</b> 꼭짓점을 클릭하세요.',
+  '4개 점이 지정되었습니다. 점을 드래그해서 조정하거나 <b>분할 시작</b>을 누르세요.',
+];
+function updateGuide(){
+  guideText.innerHTML = GUIDE_MSGS[Math.min(pts.length, 4)];
+}
+
+// ── 좌표 정보 업데이트 ────────────────────────────────────
+function updateCoordDisplay(){
+  if(pts.length < 2){ ciBox.textContent='—'; ciCell.textContent='—'; return; }
+  const b = getBounds();
+  ciBox.textContent  = `x=${Math.round(b.x)} y=${Math.round(b.y)} w=${Math.round(b.w)} h=${Math.round(b.h)}`;
+  ciCell.textContent = `${Math.round(b.w/COLS)} × ${Math.round(b.h/ROWS)} px`;
+}
+
+// ── bounding box ─────────────────────────────────────────
+function getBounds(){
+  const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+  return {x, y, w, h};
+}
+
+// ── 렌더링 ────────────────────────────────────────────────
+function render(){
+  ctx.clearRect(0,0,cvs.width,cvs.height);
   ctx.drawImage(origImg, 0, 0, cvs.width, cvs.height);
 
-  const b = boxCanvas();
+  if(pts.length >= 2){
+    const b = getBounds();
+    const bx = b.x*dispScale, by = b.y*dispScale;
+    const bw = b.w*dispScale, bh = b.h*dispScale;
 
-  // 바깥 어둡게
-  ctx.fillStyle = 'rgba(0,0,0,0.52)';
-  ctx.fillRect(0, 0, cvs.width, b.y);
-  ctx.fillRect(0, b.y, b.x, b.h);
-  ctx.fillRect(b.x + b.w, b.y, cvs.width - b.x - b.w, b.h);
-  ctx.fillRect(0, b.y + b.h, cvs.width, cvs.height - b.y - b.h);
+    // 바깥 어둡게
+    ctx.fillStyle='rgba(0,0,0,0.5)';
+    ctx.fillRect(0,0,cvs.width,by);
+    ctx.fillRect(0,by,bx,bh);
+    ctx.fillRect(bx+bw,by,cvs.width-bx-bw,bh);
+    ctx.fillRect(0,by+bh,cvs.width,cvs.height-by-bh);
 
-  // crop 테두리
-  ctx.strokeStyle = '#a78bfa';
-  ctx.lineWidth   = 2;
-  ctx.setLineDash([]);
-  ctx.strokeRect(b.x, b.y, b.w, b.h);
+    // 테두리
+    ctx.strokeStyle='#a78bfa';ctx.lineWidth=2;ctx.setLineDash([]);
+    ctx.strokeRect(bx,by,bw,bh);
 
-  // 6×4 가이드라인
-  const cw = b.w / COLS;
-  const ch = b.h / ROWS;
-  ctx.strokeStyle = 'rgba(167,139,250,0.45)';
-  ctx.lineWidth   = 1;
-  ctx.setLineDash([4, 3]);
-  for (let c = 1; c < COLS; c++) {
-    const x = b.x + c * cw;
-    ctx.beginPath(); ctx.moveTo(x, b.y); ctx.lineTo(x, b.y + b.h); ctx.stroke();
+    // 6×4 격자
+    ctx.strokeStyle='rgba(167,139,250,0.45)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    for(let c=1;c<COLS;c++){
+      const x=bx+c*(bw/COLS);
+      ctx.beginPath();ctx.moveTo(x,by);ctx.lineTo(x,by+bh);ctx.stroke();
+    }
+    for(let r=1;r<ROWS;r++){
+      const y=by+r*(bh/ROWS);
+      ctx.beginPath();ctx.moveTo(bx,y);ctx.lineTo(bx+bw,y);ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    updateCoordDisplay();
   }
-  for (let r = 1; r < ROWS; r++) {
-    const y = b.y + r * ch;
-    ctx.beginPath(); ctx.moveTo(b.x, y); ctx.lineTo(b.x + b.w, y); ctx.stroke();
-  }
-  ctx.setLineDash([]);
 
-  // 핸들
-  const hs = getHandles();
-  for (const h of Object.values(hs)) {
-    ctx.fillStyle   = '#fff';
-    ctx.strokeStyle = '#7c3aed';
-    ctx.lineWidth   = 2;
+  // 4개 점 표시
+  pts.forEach((p,i)=>{
+    const {cx,cy} = toCanvas(p.x, p.y);
     ctx.beginPath();
-    ctx.arc(h.cx, h.cy, H_SIZE / 2 + 2, 0, Math.PI * 2);
-    ctx.fill(); ctx.stroke();
-  }
+    ctx.arc(cx, cy, PT_R, 0, Math.PI*2);
+    ctx.fillStyle   = COLORS[i];
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth   = 2;
+    ctx.stroke();
 
-  // 치수 표시
-  const lw = Math.round(box.w), lh = Math.round(box.h);
-  ctx.fillStyle = 'rgba(124,58,237,0.85)';
-  ctx.font      = `bold ${Math.max(11, Math.min(14, b.w / 20))}px monospace`;
-  ctx.textAlign = 'center';
-  ctx.fillText(`${lw} × ${lh} px`, b.x + b.w / 2, b.y + b.h + 20);
+    // 라벨
+    ctx.font = `bold ${Math.round(12*Math.min(1,dispScale*2))}px sans-serif`;
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'left';
+    const lx = cx + PT_R + 4, ly = cy - PT_R - 4;
+    ctx.fillText(PT_LABELS[i], lx, ly);
+
+    // 좌표 (원본 픽셀)
+    ctx.font = `${Math.round(10*Math.min(1,dispScale*2))}px monospace`;
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText(`(${Math.round(p.x)}, ${Math.round(p.y)})`, lx, ly+14);
+  });
 }
 
-// ── 분할 실행 ──────────────────────────────────────────────
+// ── 분할 실행 ────────────────────────────────────────────
 runBtn.addEventListener('click', splitStickers);
 
-async function splitStickers() {
-  if (!origImg || !srcCvs) return;
+async function splitStickers(){
+  if(pts.length < 4){ alert('꼭짓점 4개를 모두 지정해주세요.'); return; }
 
-  const bx = Math.round(box.x);
-  const by = Math.round(box.y);
-  const bw = Math.round(box.w);
-  const bh = Math.round(box.h);
+  const b = getBounds();
+  const bx = Math.round(b.x), by = Math.round(b.y);
+  const bw = Math.round(b.w), bh = Math.round(b.h);
 
-  logEl.style.display = 'block';
-  logEl.innerHTML = '';
-  addLog('inf', `▶ 분할 시작`);
-  addLog('inf', `  원본: ${origImg.naturalWidth} × ${origImg.naturalHeight} px`);
-  addLog('inf', `  crop 박스: x=${bx}, y=${by}, w=${bw}, h=${bh}`);
-  addLog('inf', `  리사이즈 → ${OUT_W} × ${OUT_H} px`);
-  addLog('inf', `  셀: ${CELL_W} × ${CELL_H} px\n`);
+  logEl.style.display='block'; logEl.innerHTML='';
+  addLog('inf',`▶ 분할 시작`);
+  addLog('inf',`  원본: ${origImg.naturalWidth} × ${origImg.naturalHeight} px`);
+  addLog('inf',`  4개 점: ${pts.map(p=>`(${Math.round(p.x)},${Math.round(p.y)})`).join(' / ')}`);
+  addLog('inf',`  bounding box: x=${bx} y=${by} w=${bw} h=${bh}`);
+  addLog('inf',`  → 리사이즈 ${OUT_W}×${OUT_H} → 셀 ${CELL_W}×${CELL_H}\n`);
 
-  runBtn.disabled = true;
-  progWrap.style.display = 'block';
-  progBar.style.width    = '0%';
-  resultSec.style.display = 'block';
-  stickerGrid.innerHTML  = '';
-  resultBlobs            = [];
+  runBtn.disabled=true;
+  progWrap.style.display='block';
+  progBar.style.width='0%';
+  resultSec.style.display='block';
+  stickerGrid.innerHTML='';
+  resultBlobs=[];
 
-  // Step 1: crop box 영역을 원본 픽셀로 추출
+  // Step 1: 원본 이미지에서 bounding box 영역 crop (srcCvs 사용 - 원본 해상도)
   const cropCvs = document.createElement('canvas');
-  cropCvs.width  = bw;
-  cropCvs.height = bh;
+  cropCvs.width=bw; cropCvs.height=bh;
   const cropCtx = cropCvs.getContext('2d');
   cropCtx.drawImage(srcCvs, bx, by, bw, bh, 0, 0, bw, bh);
+  addLog('inf',`  [1] 원본에서 crop: ${bw}×${bh} px`);
 
   // Step 2: 4440×2560으로 고품질 리사이즈
   const outCvs = document.createElement('canvas');
-  outCvs.width  = OUT_W;
-  outCvs.height = OUT_H;
+  outCvs.width=OUT_W; outCvs.height=OUT_H;
   const outCtx = outCvs.getContext('2d');
-  outCtx.imageSmoothingEnabled = true;
-  outCtx.imageSmoothingQuality = 'high';
+  outCtx.imageSmoothingEnabled=true;
+  outCtx.imageSmoothingQuality='high';
   outCtx.drawImage(cropCvs, 0, 0, OUT_W, OUT_H);
+  addLog('inf',`  [2] 리사이즈: ${OUT_W}×${OUT_H} px\n`);
 
-  addLog('inf', `  Step 1 crop 완료: ${bw}×${bh} px`);
-  addLog('inf', `  Step 2 리사이즈 완료: ${OUT_W}×${OUT_H} px\n`);
+  // Step 3: 740×640 분할
+  for(let i=0;i<TOTAL;i++){
+    const row=Math.floor(i/COLS), col=i%COLS;
+    const sx=col*CELL_W, sy=row*CELL_H;
 
-  // Step 3: 740×640 단위로 분할
-  for (let i = 0; i < TOTAL; i++) {
-    const row = Math.floor(i / COLS);
-    const col = i % COLS;
-    const sx  = col * CELL_W;
-    const sy  = row * CELL_H;
-
-    const cell = document.createElement('canvas');
-    cell.width  = CELL_W;
-    cell.height = CELL_H;
+    const cell=document.createElement('canvas');
+    cell.width=CELL_W; cell.height=CELL_H;
     cell.getContext('2d').drawImage(outCvs, sx, sy, CELL_W, CELL_H, 0, 0, CELL_W, CELL_H);
 
-    const w = cell.width, h = cell.height;
-    const ok = w === CELL_W && h === CELL_H;
-    const fname = `sticker_${String(i + 1).padStart(2, '0')}.png`;
-    addLog(ok ? 'ok' : 'er', `  ${fname}  ${w} × ${h} px  [${ok ? 'OK' : 'ERROR'}]`);
+    const w=cell.width, h=cell.height;
+    const ok=w===CELL_W&&h===CELL_H;
+    const fname=`sticker_${String(i+1).padStart(2,'0')}.png`;
+    addLog(ok?'ok':'er',`  ${fname}  ${w} × ${h} px  [${ok?'OK':'ERROR'}]`);
 
-    const blob    = await toBlob(cell);
-    const dataUrl = cell.toDataURL('image/png');
-    resultBlobs.push({ fname, blob });
+    const blob=await toBlob(cell);
+    const dataUrl=cell.toDataURL('image/png');
+    resultBlobs.push({fname,blob});
 
-    const div  = document.createElement('div');
-    div.className = 's-item'; div.title = fname;
-    const imgEl = document.createElement('img'); imgEl.src = dataUrl;
-    const numEl = document.createElement('span'); numEl.className = 'n'; numEl.textContent = String(i + 1).padStart(2, '0');
+    const div=document.createElement('div');
+    div.className='s-item'; div.title=fname;
+    const imgEl=document.createElement('img'); imgEl.src=dataUrl;
+    const numEl=document.createElement('span'); numEl.className='n';
+    numEl.textContent=String(i+1).padStart(2,'0');
     div.appendChild(imgEl); div.appendChild(numEl);
-    div.addEventListener('click', () => downloadBlob(blob, fname));
+    div.addEventListener('click',()=>downloadBlob(blob,fname));
     stickerGrid.appendChild(div);
 
-    progBar.style.width = `${((i + 1) / TOTAL) * 100}%`;
-    progLbl.textContent  = `${i + 1} / ${TOTAL}`;
+    progBar.style.width=`${((i+1)/TOTAL)*100}%`;
+    progLbl.textContent=`${i+1} / ${TOTAL}`;
     await tick();
   }
 
-  addLog('ok', `\n✓ 완료: ${TOTAL}개 파일 (${CELL_W} × ${CELL_H} px)`);
-  runBtn.disabled = false;
+  addLog('ok',`\n✓ 완료: ${TOTAL}개 파일 (${CELL_W} × ${CELL_H} px)`);
+  runBtn.disabled=false;
 }
 
-// ── ZIP 다운로드 ───────────────────────────────────────────
-dlBtn.addEventListener('click', async () => {
-  if (!resultBlobs.length) return;
-  dlBtn.disabled = true; dlBtn.textContent = '압축 중…';
-  const zip = new JSZip();
-  resultBlobs.forEach(({ fname, blob }) => zip.file(fname, blob));
-  const zb = await zip.generateAsync({ type: 'blob' });
-  downloadBlob(zb, 'stickers_ogq.zip');
-  dlBtn.disabled = false; dlBtn.textContent = '⬇️ 전체 ZIP 다운로드';
+// ── ZIP ───────────────────────────────────────────────────
+dlBtn.addEventListener('click', async()=>{
+  if(!resultBlobs.length) return;
+  dlBtn.disabled=true; dlBtn.textContent='압축 중…';
+  const zip=new JSZip();
+  resultBlobs.forEach(({fname,blob})=>zip.file(fname,blob));
+  const zb=await zip.generateAsync({type:'blob'});
+  downloadBlob(zb,'stickers_ogq.zip');
+  dlBtn.disabled=false; dlBtn.textContent='⬇️ 전체 ZIP 다운로드 (sticker_01 ~ sticker_24)';
 });
 
-// ── 유틸 ──────────────────────────────────────────────────
-function toBlob(c) { return new Promise(r => c.toBlob(r, 'image/png')); }
-function tick()    { return new Promise(r => requestAnimationFrame(r)); }
-function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
-
-function downloadBlob(blob, name) {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name; a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+// ── 유틸 ─────────────────────────────────────────────────
+function toBlob(c){return new Promise(r=>c.toBlob(r,'image/png'))}
+function tick(){return new Promise(r=>requestAnimationFrame(r))}
+function clamp(v,a,b){return Math.min(Math.max(v,a),b)}
+function downloadBlob(blob,name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
-
-function addLog(cls, msg) {
-  const s = document.createElement('span');
-  s.className = cls; s.textContent = msg + '\n';
-  logEl.appendChild(s); logEl.scrollTop = logEl.scrollHeight;
+function addLog(cls,msg){
+  const s=document.createElement('span');
+  s.className=cls; s.textContent=msg+'\n';
+  logEl.appendChild(s); logEl.scrollTop=logEl.scrollHeight;
 }
-
-// ── 창 리사이즈 시 재렌더 ──────────────────────────────────
-window.addEventListener('resize', () => { if (origImg) { initCanvas(); render(); } });
-
 })();
 </script>
 </body>
