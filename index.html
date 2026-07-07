@@ -240,7 +240,8 @@ function loadFile(file){
 // ── 캔버스 초기화 ─────────────────────────────────────────
 function initCanvas(){
   const maxW=Math.min(920, window.innerWidth-32);
-  dispScale=maxW/origImg.naturalWidth;
+  const maxH=2000;
+  dispScale=Math.min(maxW/origImg.naturalWidth, maxH/origImg.naturalHeight);
   cvs.width =Math.round(origImg.naturalWidth *dispScale);
   cvs.height=Math.round(origImg.naturalHeight*dispScale);
 }
@@ -345,7 +346,7 @@ function render(){
   ctx.strokeRect(lx,ty,rx-lx,by-ty);
 
   // 내부 구분선 (수직)
-  ctx.strokeStyle='rgba(167,139,250,0.5)';ctx.lineWidth=1;ctx.setLineDash([5,3]);
+  ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=1;ctx.setLineDash([5,3]);
   for(let i=1;i<COLS;i++){
     const x=toC(vLines[i]);
     ctx.beginPath();ctx.moveTo(x,ty);ctx.lineTo(x,by);ctx.stroke();
